@@ -1,6 +1,6 @@
 from game_board import GameBoard, Piece, SHAPES, COLORS
 from player import Player
-from bots import GreedyBot, SingleGreedyBot
+from bots import GreedyBot, SingleGreedyBot, RandomBot
 
 
 class QwirkleGame:
@@ -8,6 +8,7 @@ class QwirkleGame:
         self._bag_of_tiles = []
         self._players = []
         self._board = []
+        self._winner = None
 
     def main(self, players):
 
@@ -20,6 +21,8 @@ class QwirkleGame:
                 self._players.append(GreedyBot('Player %i' % player_number))
             elif player == 'single_greedy_bot':
                 self._players.append(SingleGreedyBot('Player %i' % player_number))
+            elif player == 'random_bot':
+                self._players.append(RandomBot('Player %i' % player_number))
             elif player == 'human':
                 self._players.append(Player('Player %i' % player_number))
             else:
@@ -66,6 +69,7 @@ class QwirkleGame:
                 current_player = 0
 
         winning_player = max(self._players, key=lambda p: p.score())
+        self.winning_player = winning_player
 
         print('\n  Final Score:')
         for i in range(len(self._players)):
@@ -99,3 +103,6 @@ class QwirkleGame:
             for c in range(len(colors)):
                 for s in range(len(shapes)):
                     self._bag_of_tiles.append(Piece(color=colors[c], shape=shapes[s]))
+
+    def get_winner(self):
+        return self.winning_player

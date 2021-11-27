@@ -5,5 +5,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Qwirkle')
     parser.add_argument('--players', nargs='+')
 
-    game = QwirkleGame()
-    game.main(parser.parse_args().players)
+    winner = []
+    for i in range(1):
+        game = QwirkleGame()
+        game.main(parser.parse_args().players)
+        winner.append(game.get_winner())
+
+    print(winner)

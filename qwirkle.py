@@ -1,6 +1,6 @@
 from game_board import GameBoard, Piece, SHAPES, COLORS
 from player import Player
-from bots import GreedyBot, SingleGreedyBot, RandomBot
+from bots import GreedyBot, SingleGreedyBot, RandomBot, MctsBot
 
 
 class QwirkleGame:
@@ -23,6 +23,8 @@ class QwirkleGame:
                 self._players.append(SingleGreedyBot('Player %i' % player_number))
             elif player == 'random_bot':
                 self._players.append(RandomBot('Player %i' % player_number))
+            elif player == 'mcts_bot':
+                self._players.append(MctsBot('Player %i' % player_number))
             elif player == 'human':
                 self._players.append(Player('Player %i' % player_number))
             else:
@@ -46,7 +48,7 @@ class QwirkleGame:
             self._board.print_board(show_valid_placements=False)
             self._players[current_player].pick_tiles(self._bag_of_tiles)
             self._board.start_turn()
-            self._players[current_player].play_turn(self._board)
+            self._players[current_player].play_turn(self._board, self._bag_of_tiles)
 
             score = self._board.score()
             self._players[current_player].add_points(score)

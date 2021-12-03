@@ -4,7 +4,7 @@ from game_board import InvalidPlayException
 
 
 class SingleGreedyBot(Player):
-    def play_turn(self, board):
+    def play_turn(self, board, bag_of_tiles):
         valid_starts = board.valid_plays()
 
         plays = []

@@ -5,9 +5,9 @@ from game_board import InvalidPlayException
 
 
 class RandomBot(Player):
-    def play_turn(self, board):
+    def play_turn(self, board, bag_of_tiles):
         valid_starts = board.valid_plays()
-
+        
         plays = []
         for (x, y) in valid_starts:
             tiles = self._tiles.copy()

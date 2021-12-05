@@ -3,83 +3,62 @@ import random
 import numpy as np
 from player import Player
 from game_board import InvalidPlayException
+from MCTSNode import MonteCarloTreeSearchNode
+from game_board import GameBoard, Piece, SHAPES, COLORS
 
 
 class MctsBot(Player):
+    #def __init__(self, name, bag_of_tiles):
+    #    super().__init__(name)
+    #    self.bag_of_tiles = bag_of_tiles
+    def _generate_new_bag_of_tiles(self):
+        all_tiles = []
 
-    def get_plays(self, board):
-        valid_starts = board.valid_plays()
+        shapes = [
+            SHAPES.CIRCLE,
+            SHAPES.DIAMOND,
+            SHAPES.SPARKLE,
+            SHAPES.SQUARE,
+            SHAPES.STAR,
+            SHAPES.TRIANGLE
+        ]
 
-        plays = []
-        for (x, y) in valid_starts:
-            tiles = self._tiles.copy()
+        colors = [
+            COLORS.BLUE,
+            COLORS.CYAN,
+            COLORS.GREEN,
+            COLORS.MAGENTA,
+            COLORS.RED,
+            COLORS.YELLOW
+        ]
 
-            for i in range(len(tiles)):
-                tile_played = False
-                try:
-                    board.play(tiles[i], x=x, y=y)
-                    plays.append({
-                        'plays': [(x, y, tiles[i])],
-                        'score': board.score()
-                    })
-                    tiles_remaining = tiles.copy()
-                    tiles_remaining.pop(i)
-                    tile_played = True
-                except InvalidPlayException:
-                    pass
+        for i in range(3):
+            for c in range(len(colors)):
+                for s in range(len(shapes)):
+                    all_tiles.append(Piece(color=colors[c], shape=shapes[s]))
 
-                while tile_played:
-                    tile_played = False
-                    for (nx, ny) in board.valid_plays():
-                        for j in range(len(tiles_remaining)):
-                            try:
-                                board.play(tiles_remaining[j], x=nx, y=ny)
-                                plays[-1]['plays'].append((nx, ny, tiles_remaining[j]))
-                                plays[-1]['score'] = board.score()
-                                tiles_remaining.pop(j)
-                                tile_played = True
-                                break
-                            except InvalidPlayException:
-                                pass
-
-            board.reset_turn()
-        return plays
-
-
-    def calc_ucb1(s, a, Q, N):
-        
-        # Exploration parameter
-        c = 2
-
-        if N[(s, a)] == 0:
-            return np.inf
-        Ns = sum([N[pair] for pair in N.keys() if pair[0]==s])
-        return Q[(s, a)] + c*np.sqrt(np.log(Ns) / N[(s, a)])
-        
+        return all_tiles
 
     def play_turn(self, board, bag_of_tiles):
 
-        plays = self.get_plays(board)
+        #plays = self.get_plays(board)
+        board_copy = copy.deepcopy(board)
 
-        # Iterations parameter
-        m = 10
+        all_tiles = self._generate_new_bag_of_tiles()
+        tiles_copy = copy.deepcopy(self._tiles)
+        bag_of_tiles = copy.deepcopy(bag_of_tiles)
+        tiles_on_board = board.get_tiles_on_board()
 
+        # get all the tiles including the unknown ones
+        possible_tiles = list(set(all_tiles) - set(tiles_copy + tiles_on_board))
 
-        ucb1_vals = []
-        Q = {}
-        N = {}
+        randomized_tiles_from_other_player = list(np.random.choice(possible_tiles, size=6, replace=False))
+        randomized_bag_of_tiles = list(set(possible_tiles) - set(randomized_tiles_from_other_player))
 
-        for i in range(m):
-            while True:
-                A = get_plays()
-                if N[curr_state][curr_action] == 0:
-                    pass
-                    # do a rollout
-
-
-        if len(plays) == 0:
-            return
-
+        #breakpoint()
+        root = MonteCarloTreeSearchNode(state=board_copy, player_tiles=tiles_copy, opp_tiles=randomized_tiles_from_other_player, bag_of_tiles=randomized_bag_of_tiles)
+        selected_node = root.best_action()
+        breakpoint()
         # To do: take action that maximizes avg value
         random_play = plays[random.randint(0, len(plays)-1)]
 

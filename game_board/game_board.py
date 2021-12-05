@@ -11,6 +11,17 @@ class GameBoard:
         self._plays = []
         self._last_plays = []
 
+    def get_tiles_on_board(self):
+        """Given the current board, get the 
+        tiles that have already been played"""
+        tiles = []
+        for row in self._board:
+            for tile in row:
+                if tile is not None:
+                    tiles.append(tile)
+
+        return tiles
+
     def reset_board(self):
         """Clear the current board"""
         self._board = []

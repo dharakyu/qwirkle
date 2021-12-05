@@ -30,7 +30,9 @@ class MonteCarloTreeSearchNode():
 		return self._number_of_visits
 
 	def get_plays(self, board, tiles):
+		#breakpoint()
 		valid_starts = board.valid_plays()
+		#original_board = copy.deepcopy(board)
 
 		plays = []
 		for (x, y) in valid_starts:
@@ -63,8 +65,9 @@ class MonteCarloTreeSearchNode():
 								break
 							except InvalidPlayException:
 								pass
-
+			#breakpoint()
 			board.reset_turn()
+			#board = original_board
 
 		return plays
 
@@ -76,19 +79,31 @@ class MonteCarloTreeSearchNode():
 			player_tiles.append(bag_of_tiles.pop(i))
 
 	def expand(self):
+		# helper function to remove a tile that's been played
+		def remove_tile_from_list(tiles_copy, tile):
+			refreshed = []
+			for item in tiles_copy:
+				if item.color == tile.color and item.shape == tile.shape:
+					continue
+				else:
+					refreshed.append(item)
+			return refreshed
+
 		action = self._untried_actions.pop()
 
-		#board_copy = copy.deepcopy(self.state)
-		#tiles_copy = copy.deepcopy(self.tiles)
+		board_copy = copy.deepcopy(self.state)
+		tiles_copy = copy.deepcopy(self.tiles)
+
 		for (x, y, tile) in action['plays']:
-			#if tile not in tiles_copy:
-			#	breakpoint()
-			self.state.play(tile, x, y)
-			self.tiles.pop(self.tiles.index(tile))
+			board_copy.play(tile, x, y)
+			#tiles_copy.pop(self.tiles.index(tile))
+			tiles_copy = remove_tile_from_list(tiles_copy, tile)
+			
 
 		# replenish tiles for the player
-		self.pick_tiles(self.tiles, self.bag_of_tiles)
-		child_node = MonteCarloTreeSearchNode(self.state, self.tiles, self.tiles_from_other_player, self.bag_of_tiles, parent=self, parent_action=action)
+		self.pick_tiles(tiles_copy, self.bag_of_tiles)
+		child_node = MonteCarloTreeSearchNode(board_copy, 
+			tiles_copy, copy.deepcopy(self.tiles_from_other_player), copy.deepcopy(self.bag_of_tiles), parent=self, parent_action=action)
 
 		self.children.append(child_node)
 		return child_node
@@ -97,22 +112,20 @@ class MonteCarloTreeSearchNode():
 		return len(self.tiles) == 0 or len(self.tiles_from_other_player) == 0
 
 	def rollout(self):
-		breakpoint()
+		#breakpoint()
 		current_rollout_state = copy.deepcopy(self.state)
 		tiles_copy = copy.deepcopy(self.tiles)
 		tiles_from_other_player_copy = copy.deepcopy(self.tiles_from_other_player)
 		bag_of_tiles_copy = copy.deepcopy(self.bag_of_tiles)
 		
+		opp_score = 0
+		my_score = 0
 		move = 0
 		while True:
-			#breakpoint()
-			# opponent goes
-			print(move)
-			#breakpoint()
-			state_copy = copy.deepcopy(current_rollout_state)
-			opp_possible_moves = self.get_plays(state_copy, tiles_from_other_player_copy)
+
+			current_rollout_state.start_turn()
+			opp_possible_moves = self.get_plays(current_rollout_state, tiles_from_other_player_copy)
 			if len(opp_possible_moves) == 0:
-				#breakpoint()
 				# replace all the tiles
 				bag_of_tiles_copy += tiles_from_other_player_copy
 				tiles_from_other_player_copy = []
@@ -123,6 +136,9 @@ class MonteCarloTreeSearchNode():
 				for (x, y, tile) in opp_action['plays']:
 					current_rollout_state.play(tile, x, y)
 					tiles_from_other_player_copy.pop(tiles_from_other_player_copy.index(tile))
+			score = current_rollout_state.score()
+			opp_score += score
+			current_rollout_state.end_turn()
 
 			#print(current_rollout_state._board)
 			self.pick_tiles(tiles_from_other_player_copy, bag_of_tiles_copy)
@@ -130,11 +146,12 @@ class MonteCarloTreeSearchNode():
 			if len(tiles_from_other_player_copy) == 0:
 				break
 
-			breakpoint()
-			state_copy = copy.deepcopy(current_rollout_state)
-			possible_moves = self.get_plays(state_copy, tiles_copy)
+			# we go
+			current_rollout_state.start_turn()
+			possible_moves = self.get_plays(current_rollout_state, tiles_copy)
+
+			possible_moves = self.get_plays(current_rollout_state, tiles_copy)
 			if len(possible_moves) == 0:
-				#breakpoint()
 				# replace all the tiles
 				bag_of_tiles_copy += tiles_copy
 				tiles_copy = []
@@ -145,7 +162,10 @@ class MonteCarloTreeSearchNode():
 					current_rollout_state.play(tile, x, y)
 					tiles_copy.pop(tiles_copy.index(tile))
 			
-			#print(current_rollout_state._board)
+			score = current_rollout_state.score()
+			my_score += score
+			current_rollout_state.end_turn()
+
 			self.pick_tiles(tiles_copy, bag_of_tiles_copy)
 
 			if len(tiles_copy) == 0:
@@ -153,7 +173,8 @@ class MonteCarloTreeSearchNode():
 
 			move += 1
 		#breakpoint()
-		return current_rollout_state.score()
+		#return current_rollout_state.score()
+		return my_score
 
 	def backpropagate(self, reward):
 		self._number_of_visits += 1.
@@ -182,10 +203,11 @@ class MonteCarloTreeSearchNode():
 		return current_node
 
 	def best_action(self):
-		simulation_no = 100
+		simulation_no = 3
 		
 		#breakpoint()
 		for i in range(simulation_no):
+			print("simulation num", i)
 			
 			v = self._tree_policy()
 			reward = v.rollout()

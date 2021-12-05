@@ -58,10 +58,19 @@ class MctsBot(Player):
         #breakpoint()
         root = MonteCarloTreeSearchNode(state=board_copy, player_tiles=tiles_copy, opp_tiles=randomized_tiles_from_other_player, bag_of_tiles=randomized_bag_of_tiles)
         selected_node = root.best_action()
-        breakpoint()
-        # To do: take action that maximizes avg value
-        random_play = plays[random.randint(0, len(plays)-1)]
+        best_action = selected_node.parent_action
 
-        for (x, y, tile) in random_play['plays']:
+        # helper function to remove a tile that's been played
+        def remove_tile_from_list(tile):
+            refreshed = []
+            for item in self._tiles:
+                if item.color == tile.color and item.shape == tile.shape:
+                    continue
+                else:
+                    refreshed.append(item)
+            return refreshed
+
+        #breakpoint()
+        for (x, y, tile) in best_action['plays']:
             board.play(tile, x, y)
-            self._tiles.pop(self._tiles.index(tile))
+            self._tiles = remove_tile_from_list(tile)

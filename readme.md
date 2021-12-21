@@ -12,6 +12,8 @@ types supported are:
  - human
  - greedy_body -- will always play the highest scoring combo
  - single_greedy_bot -- will only play one tile at a time, but will always play the highest scoring tile
+ - random_bot -- will play a random move
+ - mcts_bot -- uses [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) to play a move. For efficiency, each turn runs 3 simulations
  
 For instance, to watch the two greedy bots play against each other:
 `python play.py --players greedy_bot greedy_bot` and to play against a single_greedy_bot:
